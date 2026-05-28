@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Отчёты и аналитика</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    .chart-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 24px; }
+    .chart-card { background: white; padding: 20px; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .export-buttons { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .filter-bar { display: flex; gap: 16px; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; }
+    .filter-bar input, .filter-bar select { width: auto; min-width: 150px; margin-bottom: 0; }
+    @media print { .navbar, .export-buttons, .filter-bar, button { display: none; } body { padding: 0; background: white; } .card { box-shadow: none; padding: 0; } }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="navbar">
+    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    <a href="/dashboard.html"><i class="fas fa-home"></i> Главная</a>
+    <a href="/calendar.html"><i class="fas fa-calendar-alt"></i> Календарь</a>
+    <span class="user-info" id="reportsUser"></span>
+  </div>
+  <div class="card">
+    <h2><i class="fas fa-chart-line"></i> Отчёты и аналитика</h2>
+    <div class="export-buttons">
+      <button id="exportPDFBtn" class="btn"><i class="fas fa-file-pdf"></i> Экспортировать всё в PDF</button>
+      <button id="printBtn" class="btn-outline"><i class="fas fa-print"></i> Печать</button>
+      <button id="exportChartBtn" class="btn-outline"><i class="fas fa-chart-simple"></i> Экспортировать только графики</button>
+    </div>
+    <div class="filter-bar">
+      <div><label><i class="fas fa-calendar-alt"></i> Дата начала</label><input type="date" id="startDate"></div>
+      <div><label><i class="fas fa-calendar-alt"></i> Дата окончания</label><input type="date" id="endDate"></div>
+      <div><label><i class="fas fa-procedures"></i> Процедура</label><select id="procedureFilter"><option value="all">Все процедуры</option></select></div>
+      <div><label><i class="fas fa-tag"></i> Статус</label><select id="statusFilter"><option value="all">Все статусы</option><option value="Назначена">Назначена</option><option value="Выполнена">Выполнена</option><option value="Не явился">Не явился</option></select></div>
+      <button id="applyFilterBtn" class="btn"><i class="fas fa-check"></i> Применить фильтр</button>
+      <button id="resetFilterBtn" class="btn-outline"><i class="fas fa-times"></i> Сбросить</button>
+    </div>
+  </div>
+  <div id="reportContent">
+    <div class="card" id="statsReport"><h2><i class="fas fa-chart-simple"></i> Ключевые показатели</h2><div class="grid-3" id="statsCards"></div></div>
+    <div class="chart-row">
+      <div class="chart-card"><h3><i class="fas fa-chart-pie"></i> Статус процедур</h3><canvas id="statusChart" width="280" height="200"></canvas></div>
+      <div class="chart-card"><h3><i class="fas fa-chart-line"></i> Динамика процедур по месяцам</h3><canvas id="trendChart" width="280" height="200"></canvas></div>
+    </div>
+    <div class="chart-row">
+      <div class="chart-card"><h3><i class="fas fa-chart-bar"></i> Загрузка ресурсов</h3><canvas id="resourceChart" width="280" height="200"></canvas></div>
+      <div class="chart-card"><h3><i class="fas fa-chart-bar"></i> Активность пациентов</h3><canvas id="patientActivityChart" width="280" height="200"></canvas></div>
+    </div>
+    <div class="card"><h2><i class="fas fa-table"></i> Детальный отчёт по процедурам</h2><div style="overflow-x: auto;"><table id="reportTable"><thead><tr><th>Дата</th><th>Время</th><th>Пациент</th><th>Процедура</th><th>Статус</th><th>Комментарий</th></tr></thead><tbody></tbody></table></div></div>
+  </div>
+</div>
+<script src="/js/auth.js"></script>
+<script src="/js/reports.js"></script>
+<script src="/js/menu.js"></script>
+</body>
+</html>

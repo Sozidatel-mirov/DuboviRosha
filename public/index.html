@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Медицинская система | Вход</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div class="container" style="max-width: 480px; margin: 80px auto;">
+  <div class="card">
+    <div style="text-align: center; margin-bottom: 32px;">
+      <h1><i class="fas fa-hospital-user"></i> Оздоровительная система</h1>
+      <p style="color: #5a7a8c;">Авторизация</p>
+    </div>
+    
+    <label><i class="fas fa-envelope"></i> Логин</label>
+    <input type="text" id="login" placeholder="Введите логин" autocomplete="off">
+    
+    <label><i class="fas fa-lock"></i> Пароль</label>
+    <input type="password" id="password" placeholder="Введите пароль">
+    
+    <button id="loginBtn" style="width: 100%; padding: 14px; font-size: 1rem;"><i class="fas fa-sign-in-alt"></i> Войти</button>
+    
+    <div id="errorMsg" style="color: #dc3545; margin-top: 20px; text-align: center; font-size: 0.9rem;"></div>
+    
+    <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 0.8rem; color: #8ba0ae;">
+      <p>Демо-доступ: admin / admin123 | doctor / doc123 | staff / staff123</p>
+    </div>
+    
+    <div class="step-link" style="margin-top: 20px; text-align: center;">
+      <a href="/register.html" style="color: #1a6d5e; text-decoration: none; font-weight: 500;">
+        <i class="fas fa-user-plus"></i> Нет аккаунта? Зарегистрироваться
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="/js/auth.js"></script>
+</body>
+</html>

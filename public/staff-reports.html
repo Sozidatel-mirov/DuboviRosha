@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Отчёты медперсонала</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .filter-bar { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
+    .filter-bar input, .filter-bar select { width: auto; min-width: 150px; margin-bottom: 0; }
+    .search-bar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; }
+    .search-bar input { flex: 1; }
+    .print-btn { background: #2c5a6e; }
+    @media print { .navbar, .filter-bar, .search-bar, button { display: none; } body { padding: 0; background: white; } .card { box-shadow: none; padding: 0; } }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="navbar">
+    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    <a href="/dashboard.html"><i class="fas fa-home"></i> Главная</a>
+    <a href="/staff.html"><i class="fas fa-clipboard-list"></i> Мои процедуры</a>
+    <a href="/calendar.html"><i class="fas fa-calendar-alt"></i> Календарь</a>
+    <a href="/staff-reports.html"><i class="fas fa-chart-line"></i> Отчёты</a>
+    <span class="user-info" id="staffInfo"></span>
+  </div>
+  <div class="card">
+    <h2><i class="fas fa-chart-line"></i> Отчёт по посещаемости процедур</h2>
+    <div class="filter-bar">
+      <div><label><i class="fas fa-calendar-alt"></i> Дата начала</label><input type="date" id="startDate"></div>
+      <div><label><i class="fas fa-calendar-alt"></i> Дата окончания</label><input type="date" id="endDate"></div>
+      <div><label><i class="fas fa-procedures"></i> Процедура</label><select id="procedureFilter"><option value="all">Все процедуры</option></select></div>
+      <div><label><i class="fas fa-tag"></i> Статус</label><select id="statusFilter"><option value="all">Все статусы</option><option value="Назначена">Назначена</option><option value="Выполнена">Выполнена</option><option value="Не явился">Не явился</option></select></div>
+      <button id="applyFilterBtn" class="btn"><i class="fas fa-check"></i> Применить фильтр</button>
+      <button id="resetFilterBtn" class="btn-outline"><i class="fas fa-times"></i> Сбросить</button>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="tableSearch" placeholder="🔍 Поиск по пациенту, процедуре, комментарию...">
+      <button id="printReportBtn" class="print-btn"><i class="fas fa-print"></i> Печать отчёта</button>
+    </div>
+    <div class="report-table"><table id="reportTable"><thead><tr><th>Дата</th><th>Время</th><th>Пациент</th><th>Процедура</th><th>Статус</th><th>Комментарий</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+<script src="/js/auth.js"></script>
+<script src="/js/staff-reports.js"></script>
+<script src="/js/menu.js"></script>
+</body>
+</html>

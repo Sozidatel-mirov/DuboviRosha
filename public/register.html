@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Регистрация пациента</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .timer-text { color: #1a6d5e; font-weight: bold; margin-left: 10px; }
+    .resend-btn { background: transparent; border: 1px solid #1a6d5e; color: #1a6d5e; padding: 4px 12px; border-radius: 20px; margin-left: 10px; }
+    .resend-btn:hover { background: #e8f4f0; }
+    .step-link { text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+    .step-link a { color: #1a6d5e; text-decoration: none; font-weight: 500; }
+    .step-link a:hover { text-decoration: underline; }
+    .button-group { display: flex; gap: 10px; align-items: center; }
+  </style>
+</head>
+<body>
+<div class="container" style="max-width: 500px; margin: 40px auto;">
+  <div class="card">
+    <h2>Регистрация нового пациента</h2>
+    <div id="step1">
+      <div class="form-row"><label><i class="fas fa-envelope"></i> Email</label><input type="email" id="regEmail" placeholder="example@mail.ru"></div>
+      <div class="button-group">
+        <button id="sendCodeBtn" class="btn"><i class="fas fa-paper-plane"></i> Отправить код</button>
+        <button id="editEmailBtn" class="btn-outline" style="display: none;"><i class="fas fa-edit"></i> Редактировать email</button>
+      </div>
+      <div id="codeBlock" style="display: none; margin-top: 16px;">
+        <div class="form-row"><label><i class="fas fa-key"></i> Код подтверждения</label><input type="text" id="verificationCode" placeholder="Введите 6-значный код"></div>
+        <div class="form-row" style="display: flex; align-items: center; gap: 10px;">
+          <button id="verifyCodeBtn" class="btn"><i class="fas fa-check"></i> Подтвердить код</button>
+          <span id="timerDisplay" class="timer-text"></span>
+          <button id="resendCodeBtn" class="resend-btn" style="display: none;"><i class="fas fa-redo-alt"></i> Отправить снова</button>
+        </div>
+      </div>
+      <div id="step1Error" style="color:red; margin-top:10px;"></div>
+    </div>
+    <div id="step2" style="display:none;">
+      <div class="form-row"><label><i class="fas fa-user"></i> ФИО *</label><input type="text" id="fullName"></div>
+      <div class="form-row"><label><i class="fas fa-venus-mars"></i> Пол</label><select id="gender"><option value="М">Мужской</option><option value="Ж">Женский</option></select></div>
+      <div class="form-row"><label><i class="fas fa-birthday-cake"></i> Дата рождения</label><input type="date" id="birthDate"></div>
+      <div class="form-row"><label><i class="fas fa-phone"></i> Телефон</label><input type="tel" id="phone" placeholder="+7 123 456-78-90"></div>
+      <div class="form-row"><label><i class="fas fa-lock"></i> Пароль</label><input type="password" id="password"></div>
+      <div class="form-row"><label><i class="fas fa-check-circle"></i> Подтверждение пароля</label><input type="password" id="password2"></div>
+      <button id="completeRegBtn" class="btn"><i class="fas fa-user-plus"></i> Завершить регистрацию</button>
+      <div id="step2Error" style="color:red; margin-top:10px;"></div>
+    </div>
+    <div class="step-link">
+      <a href="/"><i class="fas fa-sign-in-alt"></i> Уже есть аккаунт? Войти</a>
+    </div>
+  </div>
+</div>
+<script src="/js/register.js"></script>
+</body>
+</html>

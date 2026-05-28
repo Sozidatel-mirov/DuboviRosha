@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Личный кабинет пациента</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div class="container">
+  <div class="navbar">
+    <a href="/client-dashboard.html"><i class="fas fa-home"></i> Главная</a>
+    <a href="/client-calendar.html"><i class="fas fa-calendar-alt"></i> Календарь</a>
+    <a href="/client-booking.html"><i class="fas fa-user-md"></i> Запись к врачу</a>
+    <a href="/client-profile.html"><i class="fas fa-user"></i> Профиль</a>
+    <span class="user-info" id="clientInfo"></span>
+  </div>
+
+  <!-- Список предстоящих процедур -->
+  <div class="card">
+    <h2><i class="fas fa-calendar-check"></i> Мои процедуры</h2>
+    <div id="appointmentsList"></div>
+  </div>
+
+  <!-- Планы лечения (чек-листы) -->
+  <div class="card" id="treatmentPlansCard">
+    <h2><i class="fas fa-tasks"></i> Планы лечения</h2>
+    <div id="plansContainer"></div>
+  </div>
+</div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/ai-assistant.js"></script>
+<script src="/js/client-dashboard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.js"></script>
+</body>
+</html>

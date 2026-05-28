@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мой календарь процедур</title>
+  <link rel="stylesheet" href="/lib/fullcalendar/main.min.css">
+  <script src="/lib/fullcalendar/main.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+
+</head>
+<body>
+<div class="container">
+  <div class="navbar">
+    <a href="/client-dashboard.html"><i class="fas fa-home"></i> Главная</a>
+    <a href="/client-calendar.html"><i class="fas fa-calendar-alt"></i> Календарь</a>
+    <a href="/client-booking.html"><i class="fas fa-user-md"></i> Запись к врачу</a>
+    <a href="/client-profile.html"><i class="fas fa-user"></i> Профиль</a>
+    <span class="user-info" id="clientInfo"></span>
+  </div>
+  <div class="card">
+    <h2><i class="fas fa-calendar-alt"></i> Расписание процедур</h2>
+    <div id="calendar"></div>
+  </div>
+</div>
+<script src="/js/ai-assistant.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/client-calendar.js"></script>
+</body>
+</html>

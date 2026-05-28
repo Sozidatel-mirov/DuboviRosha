@@ -1,0 +1,170 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Администратор",
+      "login": "admin",
+      "password": "admin123",
+      "role": "admin"
+    },
+    {
+      "id": 2,
+      "name": "Доктор Иванов",
+      "login": "doctor",
+      "password": "doc123",
+      "role": "doctor"
+    },
+    {
+      "id": 3,
+      "name": "Медсестра Петрова",
+      "login": "staff",
+      "password": "staff123",
+      "role": "staff"
+    },
+    {
+      "id": 1775245670922,
+      "name": "1",
+      "login": "1",
+      "password": "1",
+      "role": "doctor"
+    }
+  ],
+  "patients": [
+    {
+      "id": 101,
+      "name": "Таранат Тургина",
+      "gender": "Ж",
+      "birthDate": "1985-06-15",
+      "phone": "+7 777 111-22-33",
+      "email": "taranat@mail.ru",
+      "diagnosis": "Гипертония 2 степени",
+      "history": "2023: гипертонический криз. 2024: плановая госпитализация",
+      "allergies": "Нет",
+      "bloodType": "A(II)+"
+    },
+    {
+      "id": 102,
+      "name": "Базасу Раджам",
+      "gender": "М",
+      "birthDate": "1978-03-22",
+      "phone": "+7 777 444-55-66",
+      "email": "bazasu@mail.ru",
+      "diagnosis": "Остеохондроз",
+      "history": "Длительные боли в спине",
+      "allergies": "Пенициллин",
+      "bloodType": "B(III)+"
+    },
+    {
+      "name": "Flfvjdbx ",
+      "diagnosis": "",
+      "history": "",
+      "id": 1775245043930
+    }
+  ],
+  "appointments": [
+    {
+      "id": 1001,
+      "patientId": 101,
+      "patientName": "Таранат Тургина",
+      "procedure": "Лечебный массаж",
+      "date": "2026-04-10",
+      "time": "10:00",
+      "duration": 30,
+      "resourceId": "Кабинет массажа",
+      "status": "Назначена",
+      "comment": "",
+      "createdAt": "2026-04-03T10:00:00.000Z"
+    },
+    {
+      "id": 1002,
+      "patientId": 102,
+      "patientName": "Базасу Раджам",
+      "procedure": "Физиотерапия",
+      "date": "2026-04-10",
+      "time": "11:30",
+      "duration": 45,
+      "resourceId": "Физио-кабинет",
+      "status": "Выполнена",
+      "comment": "Процедура прошла успешно",
+      "createdAt": "2026-04-03T10:00:00.000Z"
+    },
+    {
+      "patientId": 1775245043930,
+      "patientName": "Flfvjdbx ",
+      "procedure": "kk",
+      "date": "2026-04-05",
+      "time": "08:00",
+      "duration": "30",
+      "resourceId": "Кабинет массажа",
+      "status": "Назначена",
+      "id": 1775245078132,
+      "createdAt": "2026-04-03T19:37:58.132Z"
+    },
+    {
+      "patientId": 101,
+      "patientName": "Таранат Тургина",
+      "procedure": "г7",
+      "date": "2026-04-04",
+      "time": "08:00",
+      "duration": "30",
+      "resourceId": "Кабинет массажа",
+      "status": "Назначена",
+      "id": 1775245865321,
+      "createdAt": "2026-04-03T19:51:05.321Z"
+    },
+    {
+      "patientId": 101,
+      "patientName": "Таранат Тургина",
+      "procedure": "г",
+      "date": "2026-04-04",
+      "time": "08:30",
+      "duration": "30",
+      "resourceId": "Кабинет массажа",
+      "status": "Назначена",
+      "id": 1775245875803,
+      "createdAt": "2026-04-03T19:51:15.803Z"
+    }
+  ],
+  "resources": [
+    {
+      "id": 1,
+      "name": "Кабинет массажа",
+      "type": "room"
+    },
+    {
+      "id": 2,
+      "name": "Физио-кабинет",
+      "type": "room"
+    },
+    {
+      "id": 3,
+      "name": "Зал ЛФК",
+      "type": "room"
+    },
+    {
+      "id": 4,
+      "name": "Водолечебница",
+      "type": "room"
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1775245078132,
+      "message": "Назначена процедура \"kk\" для Flfvjdbx  на 2026-04-05 08:00",
+      "read": false,
+      "createdAt": "2026-04-03T19:37:58.132Z"
+    },
+    {
+      "id": 1775245865322,
+      "message": "Назначена процедура \"г7\" для Таранат Тургина на 2026-04-04 08:00",
+      "read": false,
+      "createdAt": "2026-04-03T19:51:05.322Z"
+    },
+    {
+      "id": 1775245875803,
+      "message": "Назначена процедура \"г\" для Таранат Тургина на 2026-04-04 08:30",
+      "read": false,
+      "createdAt": "2026-04-03T19:51:15.803Z"
+    }
+  ]
+}

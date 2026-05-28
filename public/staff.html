@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Медперсонал | Мои процедуры</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .status-select, .comment-input { width: 100%; padding: 6px 8px; border-radius: 12px; border: 1px solid #e2e8f0; }
+    .comment-input { min-width: 150px; }
+    td button { margin: 2px; }
+    .status-select:disabled, .comment-input:disabled { background-color: #f0f0f0; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="navbar">
+    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    <a href="/dashboard.html"><i class="fas fa-home"></i> Главная</a>
+    <a href="/calendar.html"><i class="fas fa-calendar-alt"></i> Календарь</a>
+    <a href="/staff-reports.html"><i class="fas fa-chart-line"></i> Отчёты</a>
+    <span class="user-info" id="staffInfo"></span>
+  </div>
+
+  <div class="card">
+    <h2><i class="fas fa-calendar-day"></i> Сегодняшние процедуры</h2>
+    <div id="todayAppointments"><p style="color: #8ba0ae;"><i class="fas fa-spinner fa-pulse"></i> Загрузка...</p></div>
+  </div>
+
+  <div class="card">
+    <h2><i class="fas fa-clipboard-list"></i> Мои процедуры</h2>
+    <div style="overflow-x: auto;">
+      <table id="appointmentsTable">
+        <thead>
+          <tr>
+            <th><i class="fas fa-user"></i> Пациент</th>
+            <th><i class="fas fa-procedures"></i> Процедура</th>
+            <th><i class="fas fa-calendar-day"></i> Дата</th>
+            <th><i class="fas fa-clock"></i> Время / Длит.</th>
+            <th><i class="fas fa-tag"></i> Текущий статус</th>
+            <th><i class="fas fa-notes-medical"></i> Карта пациента</th>
+          </tr>
+        </thead>
+        <tbody><tr><td colspan="6"><i class="fas fa-spinner fa-pulse"></i> Загрузка...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно для карты пациента -->
+<div id="patientCardModal" class="modal-overlay">
+  <div class="modal-window" style="max-width: 700px;">
+    <h3><i class="fas fa-notes-medical"></i> Карта пациента</h3>
+    <div id="patientCardContent"></div>
+    <div class="modal-buttons">
+      <button onclick="closePatientCardModal()"><i class="fas fa-times"></i> Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/staff.js"></script>
+<script src="/js/menu.js"></script>
+</body>
+</html>

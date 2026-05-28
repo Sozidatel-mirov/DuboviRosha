@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мой профиль</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div class="container">
+  <div class="navbar">
+    <a href="/client-dashboard.html"><i class="fas fa-home"></i> Главная</a>
+    <a href="/client-calendar.html"><i class="fas fa-calendar-alt"></i> Календарь</a>
+    <a href="/client-booking.html"><i class="fas fa-user-md"></i> Запись к врачу</a>
+    <a href="/client-profile.html"><i class="fas fa-user"></i> Профиль</a>
+    <span class="user-info" id="clientInfo"></span>
+  </div>
+
+  <!-- Редактирование личных данных -->
+  <div class="card">
+    <h2><i class="fas fa-user-edit"></i> Личные данные</h2>
+    <div class="form-row"><label>Имя</label><input type="text" id="profileName"></div>
+    <div class="form-row"><label>Email</label><input type="email" id="profileEmail" disabled></div>
+    <div class="form-row"><label>Телефон</label><input type="text" id="profilePhone"></div>
+    <div class="form-row"><label>Дата рождения</label><input type="date" id="profileBirthDate"></div>
+    <div class="form-row"><label>Пол</label><select id="profileGender"><option value="М">Мужской</option><option value="Ж">Женский</option></select></div>
+    <button id="saveProfileBtn" class="btn">Сохранить изменения</button>
+  </div>
+  <!-- Медицинская карта (только просмотр) -->
+  <div class="card">
+    <h2><i class="fas fa-notes-medical"></i> Медицинская карта</h2>
+    <div id="medcardContent"></div>
+  </div>
+  <!-- Смена пароля -->
+  <div class="card">
+    <h2><i class="fas fa-key"></i> Смена пароля</h2>
+    <div class="form-row"><label>Старый пароль</label><input type="password" id="oldPassword"></div>
+    <div class="form-row"><label>Новый пароль</label><input type="password" id="newPassword"></div>
+    <div class="form-row"><label>Подтверждение</label><input type="password" id="newPassword2"></div>
+    <button id="changePasswordBtn" class="btn">Сменить пароль</button>
+  </div>
+
+
+</div>
+<script src="/js/ai-assistant.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/client-profile.js"></script>
+</body>
+</html>

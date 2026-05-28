@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Календарь процедур</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/lib/fullcalendar/main.min.css">
+  <script src="/lib/fullcalendar/main.min.js"></script>
+  <style>
+    .conflict-warning { background: #fff3e0; border-left: 4px solid #ff9800; padding: 12px 16px; margin-bottom: 16px; border-radius: 12px; }
+    .filter-bar { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; background: white; padding: 16px 20px; border-radius: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .filter-bar select, .filter-bar button { width: auto; margin-bottom: 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="navbar" id="navbar"></div>
+  <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+  <div class="card">
+    <h2><i class="fas fa-calendar-alt"></i> Расписание процедур</h2>
+    <div class="filter-bar">
+      <div><label><i class="fas fa-filter"></i> Фильтр по процедуре</label><select id="procedureFilter"><option value="all">Все процедуры</option></select></div>
+      <div><label><i class="fas fa-door-open"></i> Фильтр по кабинету</label><select id="cabinetFilter"><option value="all">Все кабинеты</option></select></div>
+      <button id="applyFilterBtn" class="btn"><i class="fas fa-check"></i> Применить фильтр</button>
+      <button id="resetFilterBtn" class="btn-outline"><i class="fas fa-times"></i> Сбросить</button>
+    </div>
+    <div id="conflictWarning" class="conflict-warning" style="display: none;"></div>
+    <div id="calendar"></div>
+  </div>
+  <div class="card">
+    <h2><i class="fas fa-exclamation-triangle"></i> Конфликты расписания</h2>
+    <div id="conflictList"></div>
+  </div>
+</div>
+<script src="/js/auth.js"></script>
+<script src="/js/calendar.js"></script>
+<script src="/js/menu.js"></script>
+</body>
+</html>

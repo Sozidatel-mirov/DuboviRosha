@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Запись к врачу</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .slot-btn { margin: 4px; padding: 6px 12px; border: 1px solid #1a6d5e; background: white; color: #1a6d5e; border-radius: 20px; cursor: pointer; }
+    .slot-btn.selected { background: #1a6d5e; color: white; }
+    .slots-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="navbar">
+    <a href="/client-dashboard.html"><i class="fas fa-home"></i> Главная</a>
+    <a href="/client-calendar.html"><i class="fas fa-calendar-alt"></i> Календарь процедур</a>
+    <a href="/client-booking.html"><i class="fas fa-user-md"></i> Запись к врачу</a>
+    <a href="/client-profile.html"><i class="fas fa-user"></i> Профиль</a>
+    <span class="user-info" id="clientInfo"></span>
+  </div>
+
+  <div class="card">
+    <h2><i class="fas fa-user-md"></i> Запись к врачу</h2>
+
+    <div class="form-row">
+      <div class="form-row">
+  <label><i class="fas fa-stethoscope"></i> Специальность врача</label>
+  <select id="specialtyFilter"><option value="all">Все специальности</option></select>
+</div>
+      <label><i class="fas fa-user-md"></i> Выберите врача</label>
+      <select id="doctorSelect"><option value="">-- Загрузка --</option></select>
+    </div>
+
+    <div class="form-row">
+      <label><i class="fas fa-calendar-alt"></i> Дата приёма</label>
+      <input type="date" id="appointmentDate" min="">
+    </div>
+
+    <div class="form-row">
+      <label><i class="fas fa-clock"></i> Доступное время</label>
+      <div id="slotsContainer" class="slots-container">Сначала выберите врача и дату</div>
+    </div>
+
+    <div class="form-row">
+      <label><i class="fas fa-comment-medical"></i> Причина обращения (необязательно)</label>
+      <textarea id="reason" rows="3" placeholder="Опишите симптомы или цель визита..."></textarea>
+    </div>
+
+    <button id="bookBtn" disabled><i class="fas fa-check-circle"></i> Записаться</button>
+    <div id="bookingMessage" style="margin-top: 16px;"></div>
+  </div>
+
+  <div class="card">
+    <h2><i class="fas fa-list-alt"></i> Мои записи к врачу</h2>
+    <div id="myAppointments"></div>
+  </div>
+</div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/ai-assistant.js"></script>
+<script src="/js/client-booking.js"></script>
+</body>
+</html>
