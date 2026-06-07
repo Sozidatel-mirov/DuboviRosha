@@ -53,7 +53,7 @@ function initQuickActions() {
   } else if (user.role === 'staff') {
     actions.innerHTML = '<button onclick="location.href=\'/staff.html\'"><i class="fas fa-check-double"></i> Отметить посещаемость</button>';
   } else {
-    actions.innerHTML = '<button onclick="location.href=\'/admin.html\'"><i class="fas fa-users-cog"></i> Управление сотрудниками</button><button onclick="location.href=\'/calendar.html\'"><i class="fas fa-calendar-alt"></i> Просмотр расписания</button>';
+    actions.innerHTML = '<button onclick="location.href=\'/admin.html\'"><i class="fas fa-users-cog"></i> Управление пользователями</button><button onclick="location.href=\'/calendar.html\'"><i class="fas fa-calendar-alt"></i> Просмотр расписания</button>';
   }
 }
 
