@@ -4,10 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
-const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-const cron = require('node-cron');
-const moment = require('moment-timezone');
 require('dotenv').config();
 
 // ============ ИНТЕГРАЦИЯ GIGACHAT ============
@@ -260,57 +257,6 @@ async function migrate() {
 }
 migrate();
 
-// ============ НАСТРОЙКА SMTP ============
-let transporter;
-async function initTransporter() {
-  if (process.env.MAIL_USER && process.env.MAIL_PASS) {
-    transporter = nodemailer.createTransport({
-      host: 'smtp.mail.ru',
-      port: 465,
-      secure: true,
-      auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
-    });
-    console.log('✅ SMTP Mail.ru настроен');
-  } else {
-    const testAccount = await nodemailer.createTestAccount();
-    transporter = nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      secure: false,
-      auth: { user: testAccount.user, pass: testAccount.pass },
-    });
-    console.log('✅ Используется тестовый SMTP (ethereal)');
-    console.log(`📧 Логин: ${testAccount.user}`);
-    console.log(`🔑 Пароль: ${testAccount.pass}`);
-  }
-}
-
-async function sendVerificationEmail(email, code) {
-  if (!transporter) return;
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="font-family: Arial, sans-serif; padding: 20px;"><h2 style="color: #1a6d5e;">Подтверждение регистрации</h2><p>Ваш код подтверждения:</p><h1 style="font-size: 32px; letter-spacing: 4px;">${code}</h1><p>Код действителен в течение 5 минут.</p><hr><small>Медицинская система</small></body></html>`;
-  await transporter.sendMail({
-    from: `"Медицинская система" <${process.env.MAIL_USER || 'test@ethereal.email'}>`,
-    to: email,
-    subject: 'Код подтверждения регистрации',
-    html,
-  });
-}
-
-async function sendTempPasswordEmail(email, tempPassword) {
-  if (!transporter) return;
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="font-family: Arial, sans-serif; padding: 20px;"><h2 style="color: #1a6d5e;">Добро пожаловать!</h2><p>Ваш временный пароль: <strong>${tempPassword}</strong></p><p>Рекомендуем сменить его после первого входа.</p><hr><small>Медицинская система</small></body></html>`;
-  await transporter.sendMail({
-    from: `"Медицинская система" <${process.env.MAIL_USER || 'test@ethereal.email'}>`,
-    to: email,
-    subject: 'Временный пароль для доступа',
-    html,
-  });
-}
-
-const verifiedEmails = new Map();
-const MAX_ATTEMPTS = 3;
-const CODE_EXPIRY_MINUTES = 5;
-
 // ============ GIGACHAT CLIENT ============
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 let gigachatClient = null;
@@ -334,64 +280,25 @@ async function initGigaChat() {
   }
 }
 
-// ============ РЕГИСТРАЦИЯ И АВТОРИЗАЦИЯ ============
-app.post('/api/send-verification-code', async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email обязателен' });
+// ============ ПРЯМАЯ РЕГИСТРАЦИЯ КЛИЕНТА (без подтверждения email) ============
+app.post('/api/complete-registration', async (req, res) => {
+  const { name, email, phone, birthDate, gender, password } = req.body;
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: 'Заполните обязательные поля: имя, email, пароль' });
+  }
   try {
     const existing = await getQuery(`SELECT id FROM users WHERE email = ?`, [email]);
     if (existing) return res.status(400).json({ error: 'Email уже зарегистрирован' });
-    await runQuery(`DELETE FROM email_verifications WHERE email = ?`, [email]);
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + CODE_EXPIRY_MINUTES * 60 * 1000).toISOString();
-    await runQuery(`INSERT INTO email_verifications (email, code, attempts, expires_at) VALUES (?, ?, 0, ?)`, [email, code, expiresAt]);
-    await sendVerificationEmail(email, code);
-    res.json({ success: true, message: 'Код отправлен на email' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Ошибка отправки кода' });
-  }
-});
 
-app.post('/api/verify-code', async (req, res) => {
-  const { email, code } = req.body;
-  try {
-    const record = await getQuery(`SELECT * FROM email_verifications WHERE email = ? AND code = ? AND expires_at > datetime('now')`, [email, code]);
-    if (!record) {
-      await runQuery(`UPDATE email_verifications SET attempts = attempts + 1 WHERE email = ?`, [email]);
-      const attemptsRow = await getQuery(`SELECT attempts FROM email_verifications WHERE email = ?`, [email]);
-      if (attemptsRow && attemptsRow.attempts >= MAX_ATTEMPTS) {
-        await runQuery(`DELETE FROM email_verifications WHERE email = ?`, [email]);
-        return res.status(400).json({ error: 'Превышено число попыток. Запросите новый код.' });
-      }
-      return res.status(400).json({ error: 'Неверный или просроченный код' });
-    }
-    await runQuery(`DELETE FROM email_verifications WHERE email = ?`, [email]);
-    const token = crypto.randomBytes(32).toString('hex');
-    verifiedEmails.set(token, email);
-    setTimeout(() => verifiedEmails.delete(token), 10 * 60 * 1000);
-    res.json({ success: true, token });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Ошибка проверки кода' });
-  }
-});
-
-app.post('/api/complete-registration', async (req, res) => {
-  const { token, name, gender, birthDate, phone, password } = req.body;
-  const email = verifiedEmails.get(token);
-  if (!email) return res.status(400).json({ error: 'Токен недействителен или истёк' });
-  try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await runQuery(
       `INSERT INTO users (name, login, password, role, email, email_confirmed, phone, birthDate, gender) VALUES (?, ?, ?, 'client', ?, 1, ?, ?, ?)`,
-      [name, email, hashedPassword, email, phone, birthDate, gender]
+      [name, email, hashedPassword, email, phone || '', birthDate || '', gender || '']
     );
     await runQuery(
       `INSERT INTO patients (userId, name, gender, birthDate, phone, email) VALUES (?, ?, ?, ?, ?, ?)`,
       [result.lastID, name, gender, birthDate, phone, email]
     );
-    verifiedEmails.delete(token);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -402,11 +309,8 @@ app.post('/api/complete-registration', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { login, password } = req.body;
   try {
-    const user = await getQuery(`SELECT id, name, role, email_confirmed, password FROM users WHERE login = ? OR email = ?`, [login, login]);
+    const user = await getQuery(`SELECT id, name, role, password FROM users WHERE login = ? OR email = ?`, [login, login]);
     if (!user) return res.json({ success: false, message: 'Неверный логин или пароль' });
-    if (user.role === 'client' && !user.email_confirmed) {
-      return res.json({ success: false, message: 'Подтвердите email перед входом' });
-    }
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.json({ success: false, message: 'Неверный логин или пароль' });
     res.json({ success: true, user: { id: user.id, name: user.name, role: user.role } });
@@ -497,41 +401,70 @@ app.post('/api/patients', async (req, res) => {
   const p = req.body;
   console.log('📝 Создание/обновление пациента:', p);
   try {
+    // Если передан id — обновляем существующего
     if (p.id) {
       await runQuery(`UPDATE patients SET name=?, gender=?, birthDate=?, phone=?, email=?, diagnosis=?, history=?, allergies=?, bloodType=?, weight=?, height=?, occupation=?, marital_status=?, emergency_contact=?, insurance_policy=?, vaccinations=?, chronic_diseases=? WHERE id=?`,
         [p.name, p.gender, p.birthDate, p.phone, p.email, p.diagnosis, p.history, p.allergies, p.bloodType, p.weight, p.height, p.occupation, p.marital_status, p.emergency_contact, p.insurance_policy, p.vaccinations, p.chronic_diseases, p.id]);
       return res.json(p);
     }
+
     let userId = null;
-    let isNewUser = false;
+    let tempPassword = null; // будем возвращать врачу
+
+    // Если указан email, пытаемся привязать или создать пользователя
     if (p.email && p.email.trim() !== '') {
+      // Проверяем, существует ли уже пациент с таким email
       const existingPatient = await getQuery(`SELECT id FROM patients WHERE email = ?`, [p.email]);
       if (existingPatient) {
+        // Обновляем данные существующего пациента
         await runQuery(`UPDATE patients SET name=?, gender=?, birthDate=?, phone=?, diagnosis=?, history=?, allergies=?, bloodType=?, weight=?, height=?, occupation=?, marital_status=?, emergency_contact=?, insurance_policy=?, vaccinations=?, chronic_diseases=? WHERE id=?`,
           [p.name, p.gender, p.birthDate, p.phone, p.diagnosis, p.history, p.allergies, p.bloodType, p.weight, p.height, p.occupation, p.marital_status, p.emergency_contact, p.insurance_policy, p.vaccinations, p.chronic_diseases, existingPatient.id]);
         return res.json({ ...p, id: existingPatient.id });
       }
-      const existingUser = await getQuery(`SELECT id, role FROM users WHERE email = ?`, [p.email]);
+
+      // Ищем пользователя с таким email ИЛИ login (так как у клиентов login = email)
+      let existingUser = await getQuery(`SELECT id, role FROM users WHERE email = ?`, [p.email]);
+      if (!existingUser) {
+        existingUser = await getQuery(`SELECT id, role FROM users WHERE login = ?`, [p.email]);
+      }
+
       if (existingUser) {
+        // Пользователь уже зарегистрирован
         if (existingUser.role !== 'client') {
           return res.status(400).json({ error: 'Пользователь с таким email уже зарегистрирован как сотрудник. Используйте другой email.' });
         }
         userId = existingUser.id;
         console.log(`🔗 Связываем пациента с существующим пользователем id=${userId}`);
       } else {
-        const tempPassword = Math.random().toString(36).slice(-8);
+        // Создаём нового пользователя-клиента
+        tempPassword = Math.random().toString(36).slice(-8);
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
-        const result = await runQuery(
-          `INSERT INTO users (name, login, password, role, email, email_confirmed, phone, birthDate, gender) VALUES (?, ?, ?, 'client', ?, 1, ?, ?, ?)`,
-          [p.name, p.email, hashedPassword, p.email, p.phone || '', p.birthDate || '', p.gender || '']
-        );
-        userId = result.lastID;
-        isNewUser = true;
-        console.log(`✅ Создан новый пользователь id=${userId}, роль client`);
-        await runQuery(`UPDATE users SET role = 'client' WHERE id = ?`, [userId]);
-        await sendTempPasswordEmail(p.email, tempPassword);
+        try {
+          const result = await runQuery(
+            `INSERT INTO users (name, login, password, role, email, email_confirmed, phone, birthDate, gender) VALUES (?, ?, ?, 'client', ?, 1, ?, ?, ?)`,
+            [p.name, p.email, hashedPassword, p.email, p.phone || '', p.birthDate || '', p.gender || '']
+          );
+          userId = result.lastID;
+          console.log(`✅ Создан новый пользователь id=${userId}, роль client`);
+          await runQuery(`UPDATE users SET role = 'client' WHERE id = ?`, [userId]);
+        } catch (err) {
+          if (err.code === 'SQLITE_CONSTRAINT' && err.message.includes('UNIQUE constraint failed: users.login')) {
+            // Дополнительная проверка на случай гонки запросов
+            const existingByLogin = await getQuery(`SELECT id, role FROM users WHERE login = ?`, [p.email]);
+            if (existingByLogin && existingByLogin.role === 'client') {
+              userId = existingByLogin.id;
+              console.log(`🔗 Повторная проверка: связываем с пользователем id=${userId}`);
+            } else {
+              return res.status(400).json({ error: 'Пользователь с таким email уже зарегистрирован' });
+            }
+          } else {
+            throw err;
+          }
+        }
       }
     }
+
+    // Если есть userId, проверяем, не привязан ли уже пациент к этому пользователю
     if (userId) {
       const existingPatientByUserId = await getQuery(`SELECT id FROM patients WHERE userId = ?`, [userId]);
       if (existingPatientByUserId) {
@@ -540,12 +473,18 @@ app.post('/api/patients', async (req, res) => {
         return res.json({ ...p, userId });
       }
     }
+
+    // Создаём запись пациента
     const result = await runQuery(
       `INSERT INTO patients (userId, name, gender, birthDate, phone, email, diagnosis, history, allergies, bloodType, weight, height, occupation, marital_status, emergency_contact, insurance_policy, vaccinations, chronic_diseases) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [userId, p.name, p.gender, p.birthDate, p.phone, p.email, p.diagnosis, p.history, p.allergies, p.bloodType, p.weight, p.height, p.occupation, p.marital_status, p.emergency_contact, p.insurance_policy, p.vaccinations, p.chronic_diseases]
     );
+
     const response = { ...p, id: result.lastID, userId };
-    if (isNewUser) response.passwordSent = true;
+    if (tempPassword) {
+      response.tempPassword = tempPassword;
+      console.log(`ℹ️ Временный пароль для ${p.email}: ${tempPassword} (передайте пациенту лично)`);
+    }
     console.log(`💾 Пациент сохранён, id=${result.lastID}, userId=${userId}`);
     res.json(response);
   } catch (err) {
@@ -844,6 +783,7 @@ app.get('/api/clients', async (req, res) => {
     res.json(clients);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
+
 app.post('/api/doctor/add-patient', async (req, res) => {
   const { name, email, phone, birthDate, gender } = req.body;
   try {
@@ -856,8 +796,8 @@ app.post('/api/doctor/add-patient', async (req, res) => {
       [name, email, hashed, email, tempPassword, phone, birthDate, gender]
     );
     await runQuery(`INSERT INTO patients (userId, name, gender, birthDate, phone, email) VALUES (?, ?, ?, ?, ?, ?)`, [result.lastID, name, gender, birthDate, phone, email]);
-    await sendVerificationEmail(email, `Ваш временный пароль: ${tempPassword}\nРекомендуем сменить его при первом входе.`);
-    res.json({ success: true, message: 'Пациент добавлен, пароль отправлен на email' });
+    // Временный пароль возвращается в ответе, врач может передать его пациенту
+    res.json({ success: true, message: `Пациент добавлен. Временный пароль: ${tempPassword}` });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -913,9 +853,12 @@ app.delete('/api/client/appointments/:id', requireRole('client'), async (req, re
     const patient = await getQuery(`SELECT id FROM patients WHERE userId = ?`, [userId]);
     const app = await getQuery(`SELECT id, date, time, patientName, procedureName FROM appointments WHERE id = ? AND patientId = ?`, [id, patient?.id]);
     if (!app) return res.status(404).json({ error: 'Запись не найдена' });
-    const [hour, minute] = app.time.split(':').map(Number);
-    const appDateTime = moment.tz(`${app.date} ${app.time}`, 'YYYY-MM-DD HH:mm', process.env.TIMEZONE || 'Europe/Moscow');
-    if (appDateTime.diff(moment(), 'hours') < 2) {
+    // Отмена не позднее чем за 2 часа до процедуры (без moment)
+    const appDate = new Date(`${app.date}T${app.time}`);
+    const now = new Date();
+    const diffMs = appDate.getTime() - now.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    if (diffHours < 2) {
       return res.status(400).json({ error: 'Отмена возможна не позднее чем за 2 часа до процедуры' });
     }
     await runQuery(`DELETE FROM appointments WHERE id = ?`, [id]);
@@ -953,35 +896,22 @@ app.get('/api/doctors', async (req, res) => {
   try {
     const doctors = await allQuery(sql, params);
     res.json(doctors);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get('/api/doctor-specialties', async (req, res) => {
   try {
     const specialties = await allQuery(`SELECT DISTINCT specialty FROM users WHERE role = 'doctor' AND specialty IS NOT NULL AND specialty != '' ORDER BY specialty`);
     res.json(specialties.map(s => s.specialty));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get('/api/doctor-free-slots', async (req, res) => {
   const { doctorId, date } = req.query;
-  if (!doctorId || !date) {
-    return res.status(400).json({ error: 'doctorId и date обязательны' });
-  }
+  if (!doctorId || !date) return res.status(400).json({ error: 'doctorId и date обязательны' });
   const today = new Date().toISOString().split('T')[0];
-  if (date < today) {
-    return res.status(400).json({ error: 'Нельзя записаться на прошедшую дату' });
-  }
-  // Рабочие часы 9:00-17:00, перерыв 13:00-14:00, слоты 30 мин
-  const workStart = 9;
-  const workEnd = 17;
-  const lunchStart = 13;
-  const lunchEnd = 14;
-  const slotDuration = 30;
+  if (date < today) return res.status(400).json({ error: 'Нельзя записаться на прошедшую дату' });
+  const workStart = 9, workEnd = 17, lunchStart = 13, lunchEnd = 14, slotDuration = 30;
   let slots = [];
   for (let h = workStart; h < workEnd; h++) {
     for (let m = 0; m < 60; m += slotDuration) {
@@ -991,10 +921,7 @@ app.get('/api/doctor-free-slots', async (req, res) => {
       slots.push(time);
     }
   }
-  const busy = await allQuery(
-    `SELECT appointment_time FROM doctor_appointments WHERE doctorId = ? AND appointment_date = ?`,
-    [doctorId, date]
-  );
+  const busy = await allQuery(`SELECT appointment_time FROM doctor_appointments WHERE doctorId = ? AND appointment_date = ?`, [doctorId, date]);
   const busyTimes = busy.map(b => b.appointment_time);
   const freeSlots = slots.filter(slot => !busyTimes.includes(slot));
   res.json({ freeSlots });
@@ -1003,44 +930,27 @@ app.get('/api/doctor-free-slots', async (req, res) => {
 app.post('/api/doctor-appointments', requireRole('client'), async (req, res) => {
   const userId = req.headers['x-user-id'];
   const { doctorId, appointment_date, appointment_time, reason } = req.body;
-  if (!doctorId || !appointment_date || !appointment_time) {
-    return res.status(400).json({ error: 'Не все поля заполнены' });
-  }
+  if (!doctorId || !appointment_date || !appointment_time) return res.status(400).json({ error: 'Не все поля заполнены' });
   try {
     const patient = await getQuery(`SELECT id FROM patients WHERE userId = ?`, [userId]);
     if (!patient) return res.status(404).json({ error: 'Пациент не найден' });
     const doctor = await getQuery(`SELECT id FROM users WHERE id = ? AND role = 'doctor'`, [doctorId]);
     if (!doctor) return res.status(404).json({ error: 'Врач не найден' });
     const today = new Date().toISOString().split('T')[0];
-    if (appointment_date < today) {
-      return res.status(400).json({ error: 'Нельзя записаться на прошедшую дату' });
-    }
-    const conflict = await getQuery(
-      `SELECT id FROM doctor_appointments WHERE doctorId = ? AND appointment_date = ? AND appointment_time = ?`,
-      [doctorId, appointment_date, appointment_time]
-    );
-    if (conflict) {
-      return res.status(409).json({ error: 'Это время уже занято', conflict: true });
-    }
+    if (appointment_date < today) return res.status(400).json({ error: 'Нельзя записаться на прошедшую дату' });
+    const conflict = await getQuery(`SELECT id FROM doctor_appointments WHERE doctorId = ? AND appointment_date = ? AND appointment_time = ?`, [doctorId, appointment_date, appointment_time]);
+    if (conflict) return res.status(409).json({ error: 'Это время уже занято', conflict: true });
     const [hour, minute] = appointment_time.split(':').map(Number);
-    if (hour < 9 || hour > 16 || (hour === 16 && minute > 30) || (hour === 13 && minute < 60)) {
-      return res.status(400).json({ error: 'Выбранное время вне рабочего диапазона врача' });
-    }
+    if (hour < 9 || hour > 16 || (hour === 16 && minute > 30) || (hour === 13 && minute < 60)) return res.status(400).json({ error: 'Выбранное время вне рабочего диапазона врача' });
     const result = await runQuery(
       `INSERT INTO doctor_appointments (doctorId, patientId, appointment_date, appointment_time, reason) VALUES (?, ?, ?, ?, ?)`,
       [doctorId, patient.id, appointment_date, appointment_time, reason || '']
     );
     const doctorName = await getQuery(`SELECT name FROM users WHERE id = ?`, [doctorId]);
     const patientName = await getQuery(`SELECT name FROM patients WHERE id = ?`, [patient.id]);
-    await runQuery(
-      `INSERT INTO notifications (message, read, createdAt) VALUES (?, 0, datetime('now'))`,
-      [`Клиент ${patientName.name} записался к врачу ${doctorName.name} на ${appointment_date} ${appointment_time}`]
-    );
+    await runQuery(`INSERT INTO notifications (message, read, createdAt) VALUES (?, 0, datetime('now'))`, [`Клиент ${patientName.name} записался к врачу ${doctorName.name} на ${appointment_date} ${appointment_time}`]);
     res.json({ success: true, id: result.lastID });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get('/api/client/doctor-appointments', requireRole('client'), async (req, res) => {
@@ -1056,64 +966,7 @@ app.get('/api/client/doctor-appointments', requireRole('client'), async (req, re
       ORDER BY da.appointment_date DESC, da.appointment_time
     `, [patient.id]);
     res.json(appointments);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ============ EMAIL НАПОМИНАНИЯ (CRON) ============
-async function sendReminderEmail(email, name, procedure, date, time, when) {
-  if (!transporter) return;
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><h2>Напоминание о процедуре</h2><p>Уважаемый(ая) ${name},</p><p>Напоминаем, что <strong>${when}</strong> у вас запланирована процедура:</p><p><strong>${procedure}</strong><br>${date} в ${time}</p><p>Пожалуйста, не опаздывайте.</p><hr><small>Медицинская система</small></body></html>`;
-  await transporter.sendMail({
-    from: `"Медицинская система" <${process.env.MAIL_USER || 'test@ethereal.email'}>`,
-    to: email,
-    subject: `Напоминание: ${procedure} ${when}`,
-    html
-  });
-}
-
-async function sendAppointmentReminders() {
-  if (!transporter) {
-    console.warn('SMTP не настроен, напоминания не отправляются');
-    return;
-  }
-  const timezone = process.env.TIMEZONE || 'Europe/Moscow';
-  const now = moment().tz(timezone);
-  const tomorrow = now.clone().add(1, 'day').startOf('day');
-  const inOneHour = now.clone().add(1, 'hour');
-  try {
-    const tomorrowStr = tomorrow.format('YYYY-MM-DD');
-    const dayBeforeApps = await allQuery(`
-      SELECT a.*, u.email, u.name as user_name 
-      FROM appointments a
-      JOIN patients p ON a.patientId = p.id
-      JOIN users u ON p.userId = u.id
-      WHERE a.date = ? AND a.status = 'Назначена'
-    `, [tomorrowStr]);
-    for (const app of dayBeforeApps) {
-      await sendReminderEmail(app.email, app.user_name, app.procedureName, app.date, app.time, 'завтра');
-    }
-    const inOneHourStr = inOneHour.format('YYYY-MM-DD');
-    const oneHourTime = inOneHour.format('HH:mm');
-    const hourBeforeApps = await allQuery(`
-      SELECT a.*, u.email, u.name as user_name 
-      FROM appointments a
-      JOIN patients p ON a.patientId = p.id
-      JOIN users u ON p.userId = u.id
-      WHERE a.date = ? AND a.time = ? AND a.status = 'Назначена'
-    `, [inOneHourStr, oneHourTime]);
-    for (const app of hourBeforeApps) {
-      await sendReminderEmail(app.email, app.user_name, app.procedureName, app.date, app.time, 'через час');
-    }
-  } catch(err) {
-    console.error('Ошибка при отправке напоминаний:', err);
-  }
-}
-
-cron.schedule('0 * * * *', () => {
-  console.log('🕒 Запуск отправки email-напоминаний...');
-  sendAppointmentReminders();
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // ============ AI ПОМОЩНИК (GigaChat) ============
@@ -1168,9 +1021,8 @@ ${appointments.map(a => `  * ${a.date} ${a.time}: ${a.procedureName} (${a.status
 
 // ============ ЗАПУСК СЕРВЕРА ============
 async function startServer() {
-  await initTransporter();
   await initGigaChat();
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`🏥 Сервер запущен на http://localhost:${PORT}`);
     console.log(`📋 Логин: admin / admin123 | doctor / doc123 | staff / staff123`);
   });
